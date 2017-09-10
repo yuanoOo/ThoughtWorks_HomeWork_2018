@@ -1,29 +1,38 @@
-package interview.thoughtWorks;
+package cn.jxau.yuan.utils;
 
+import cn.jxau.yuan.conf.Config;
+
+import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
+/**
+ * 工具类
+ */
 public class Utils {
 
+    /**
+     * 输入合法性校验工具
+     * @param msg
+     * @return true ：合法 false ： 非法
+     */
     public static boolean checkMsg(String msg){
         String[] msgs = msg.split(" ");
         if (msgs.length != 4 && msgs.length != 5)
             return false;
 
-        String name = msgs[0];
         String date = msgs[1];
         String time = msgs[2];
         String addr = msgs[3];
-        boolean cancelFlag = false;
-        if (msgs.length == 5){
+
+        //校验 “取消” 合法性
+        if (msgs.length == 5)
             if (!msgs[4].equals("C"))
                 return false;
-            else
-                cancelFlag = true;
-        }
 
+        //校验日期合法性
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
         try {
             format.parse(date);
@@ -31,26 +40,26 @@ public class Utils {
             return false;
         }
 
+        //校验时间合法性
         String[] times = time.split("~");
         int befor = 0, after = 0;
-        //提取整形数字
-        if (times[0].charAt(1) == ':')
-            befor = Integer.parseInt(times[0].charAt(0) + "");
-        else if (times[0].charAt(2) == ':')
-            befor = Integer.parseInt(times[0].substring(0,2));
-        else
+
+        String[] left = times[0].split(":");
+        String[] right = times[1].split(":");
+        if (left[0].length() != 2 || !left[1].equals("00")|| right[0].length() != 2 || !right[1].equals("00"))
             return false;
 
-        if (times[1].charAt(1) == ':')
-            after = Integer.parseInt(times[1].charAt(0) + "");
-        else if (times[0].charAt(2) == ':')
-            after = Integer.parseInt(times[1].substring(0,2));
-        else
+        try {
+            befor = Integer.parseInt(left[0]);
+            after = Integer.parseInt(right[0]);
+        }catch (Exception e){
             return false;
+        }
 
         if (after - befor < 1)
             return false;
 
+        //校验场地合法性
         if (addr.compareTo("A") < 0  || addr.compareTo("D") > 0)
             return false;
 
@@ -59,28 +68,24 @@ public class Utils {
 
 
     /**
-     * U002 2017-08-01 19:00~22:00 A to 2016-06-03 20:00~22:00 120元
-     * @param string
-     * @return string
+     * 字符串转换
+     * @param string U002 2017-08-01 19:00~22:00
+     * @return string 2016-06-03 20:00~22:00 120元
      */
-    //TODO:money计算有误
     public static String fixString2book(String string){
         String[] strings = string.split(" ");
-        int price = 0;
-        int money = 0;
+        BigDecimal money = new BigDecimal(0);
         if (isWeek(strings[1]))
-            price = Config.getInstance().getPrice(fixString2time(strings[2]),true);
+            money = Config.getInstance().getTotalByPriceDis(fixString2time(strings[2]),true);
         else
-            price = Config.getInstance().getPrice(fixString2time(strings[2]),false);
-
-        money = price * (Integer.parseInt(fixString2time(strings[2]).
-                split("-")[1]) - Integer.parseInt(fixString2time(strings[2]).split("-")[0]));
+            money = Config.getInstance().getTotalByPriceDis(fixString2time(strings[2]),false);
 
         return new StringBuilder(strings[1]).append(" ").append
-                (strings[2]).append(" ").append(money).append("远").toString();
+                (strings[2]).append(" ").append(money).append("元").toString();
     }
 
     /**
+     * 字符串转换
      * 19:00~22:00 @ 19-22
      * @param string
      * @return
@@ -104,8 +109,8 @@ public class Utils {
     }
 
     /**
-     *
-     * @param string
+     * 判断是否周末
+     * @param string : 2017-08-05
      * @return
      */
     public static boolean isWeek(String string){
@@ -124,19 +129,26 @@ public class Utils {
             week_index = 0;
         }
 
-        if (week_index == 0 && week_index == 6 )
+        if (week_index == 0 || week_index == 6 )
             return true;
         else
             return false;
     }
 
+    /**
+     * 字符串转换
+     * @param string:2017-08-05
+     * @return
+     * @throws ParseException
+     */
     public static Date str2Date(String  string) throws ParseException {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         return dateFormat.parse(string);
     }
 
     /**
-     * isBook
+     * 字符串处理
+     * 判断是否预定
      * @param msg
      * @return true: booking false: cancel
      */
@@ -148,11 +160,30 @@ public class Utils {
     }
 
     /**
+     * 工具类
      * U002 2017-08-01 19:00~22:00 A C
      * @param msg
      * @return A
      */
     public static String getAddr(String msg){
         return msg.split(" ")[3];
+    }
+
+    /**
+     * 字符串转换工具类
+     * U002 2017-08-01 19:00~22:00 A TO 2016-06-02 09:00~10:00 违约⾦ 15元
+     * @param string
+     * @return string
+     */
+    public static String fixString2Cancel(String string) {
+        String[] strings = string.split(" ");
+        BigDecimal money = new BigDecimal(0);
+        if (isWeek(strings[1]))
+            money = Config.getInstance().getCancelMoney(fixString2time(strings[2]),true);
+        else
+            money = Config.getInstance().getCancelMoney(fixString2time(strings[2]),false);
+
+        return new StringBuilder(strings[1]).append(" ").append
+                (strings[2]).append(" ").append("违约金 ").append(money.intValue()).append("元").toString();
     }
 }

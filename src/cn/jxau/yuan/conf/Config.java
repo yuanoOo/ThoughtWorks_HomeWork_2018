@@ -1,5 +1,11 @@
-package interview.thoughtWorks;
+package cn.jxau.yuan.conf;
 
+import java.math.BigDecimal;
+
+/**
+ * 配置类
+ * 1、单例模式
+ */
 public class Config {
     private static final Config config = new Config();
 
@@ -10,22 +16,11 @@ public class Config {
     }
 
     //收费标准
-//    private HashMap<String, Integer> workDay = new HashMap<>(5);
-//    private  HashMap<String, Integer> weekDay = new HashMap<>(2);
-
     private int[] workDay = new int[14];
     private int[] weekDay = new int[14];
 
     //初始化系统配置
     private void init(){
-//        workDay.put("9-12", 30);
-//        workDay.put("12-18", 50);
-//        workDay.put("18-20", 80);
-//        workDay.put("20-22", 60);
-//
-//        weekDay.put("9-12", 40);
-//        weekDay.put("12-18", 50);
-//        weekDay.put("18-22", 60);
         //config workday's price
         for (int i = 9; i < 12; ++i) workDay[i - 9] = 30;
         for (int i = 12; i < 18; ++i) workDay[i - 9] = 50;
@@ -47,7 +42,7 @@ public class Config {
      * @param isWeek
      * @return
      */
-    public int getTotalByPriceDis(String string, boolean isWeek){
+    public BigDecimal getTotalByPriceDis(String string, boolean isWeek){
         String[] strings = string.split("-");
         int total = 0;
         if (isWeek)
@@ -57,6 +52,19 @@ public class Config {
             for (int i = Integer.parseInt(strings[0]); i < Integer.parseInt(strings[1]); ++i)
                 total += workDay[i - 9];
 
-        return total;
+        return new BigDecimal(total);
+    }
+
+    /**
+     *
+     * @param string : 5 : 12
+     * @param isWeek
+     * @return
+     */
+    public BigDecimal getCancelMoney(String string, boolean isWeek){
+        if (isWeek)
+            return getTotalByPriceDis(string,true).multiply(new BigDecimal(0.25));
+        else
+            return getTotalByPriceDis(string,false).multiply(new BigDecimal(0.5));
     }
 }
