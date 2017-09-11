@@ -1,4 +1,4 @@
-package cn.jxau.yuan.domain;
+﻿package cn.jxau.yuan.domain;
 
 import cn.jxau.yuan.conf.Config;
 import cn.jxau.yuan.utils.Utils;
@@ -13,7 +13,8 @@ public class Address {
     private String name;
     private BigDecimal total;
     private List<String> msgList;
-    int[] timeTable = new int[14];
+    private Map<String, int[]> timeTable;//日期，时间段数组
+    //    int[] timeTable = new int[14];
     private TreeSet<String> bookMsg;
 
     public Address(String name){
@@ -21,6 +22,7 @@ public class Address {
         this.total = new BigDecimal(0);
         this.msgList = new ArrayList<>();
         this.bookMsg = new TreeSet<>();
+        timeTable = new HashMap<>();
     }
 
     /**
@@ -29,22 +31,27 @@ public class Address {
      * @return
      */
     public boolean book(String string){
+
+        String dateString = Utils.str2DateString(string);
+        if (!timeTable.containsKey(dateString))
+            timeTable.put(dateString, new int[14]);
+
         int[] time = new int[2];
         String[] strs = Utils.fixString2time(string.split(" ")[2]).split("-");
         time[0] = Integer.parseInt(strs[0]);
         time[1] = Integer.parseInt(strs[1]);
 
         //差值为1
-        if (time[1] - time[0] == 1 && timeTable[time[1] - 9] != 0 && timeTable[time[0] - 9] != 0)
+        if (time[1] - time[0] == 1 && timeTable.get(dateString)[time[1] - 9] != 0 && timeTable.get(dateString)[time[0] - 9] != 0)
             return false;
 
         for (int i = time[0] - 9; i < time[1] - 9; ++i){
-            if (timeTable[i] > 0)
+            if (timeTable.get(dateString)[i] > 0)
                 return false;
         }
 
         for (int i = time[0] - 9; i < time[1] - 9; ++i)
-            timeTable[i] += 1;
+            timeTable.get(dateString)[i] += 1;
 
         //这里保存：2016-06-03 20:00~22:00 120元
         msgList.add(Utils.fixString2book(string));
@@ -71,7 +78,7 @@ public class Address {
             time[1] = Integer.parseInt(strs[1]);
 
             for (int i = time[0] - 9; i < time[1] - 9; ++i)
-                timeTable[i] -= 1;
+                timeTable.get(Utils.str2DateString(string))[i] -= 1;
 
             //扣除total中的钱
             total = total.subtract(Config.getInstance().getTotalByPriceDis(Utils.fixString2time(string.split(" ")[2]),

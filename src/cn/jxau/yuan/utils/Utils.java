@@ -1,4 +1,4 @@
-package cn.jxau.yuan.utils;
+﻿package cn.jxau.yuan.utils;
 
 import cn.jxau.yuan.conf.Config;
 
@@ -185,5 +185,14 @@ public class Utils {
 
         return new StringBuilder(strings[1]).append(" ").append
                 (strings[2]).append(" ").append("违约金 ").append(money.intValue()).append("元").toString();
+    }
+
+    /**
+     * 字符串转日期
+     * @param string {⽤用户ID} {预订⽇日期 yyyy-MM-dd} {预订时间段 HH:mm~HH:mm} {场地} To {yyyy-MM-dd}
+     * @return
+     */
+    public static String str2DateString(String string){
+        return string.split(" ")[1];
     }
 }
