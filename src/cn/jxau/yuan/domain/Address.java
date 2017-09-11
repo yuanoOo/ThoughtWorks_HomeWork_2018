@@ -17,7 +17,7 @@ public class Address {
     //    int[] timeTable = new int[14];
     private TreeSet<String> bookMsg;
 
-    public Address(String name){
+    protected Address(String name){
         this.name = name;
         this.total = new BigDecimal(0);
         this.msgList = new ArrayList<>();
